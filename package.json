@@ -1,0 +1,19 @@
+{
+  "name": "cypress-http-cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "cypress": "^15.13.0"
+  },
+  "dependencies": {
+    "http-proxy": "^1.18.1",
+    "lru-cache": "^11.2.7"
+  }
+}
