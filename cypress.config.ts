@@ -1,7 +1,7 @@
-const { defineConfig } = require("cypress");
-const { installHttpCache } = require("./src/index");
+import { defineConfig } from "cypress";
+import { installHttpCache } from "cypress-http-cache";
 
-module.exports = defineConfig({
+export default defineConfig({
   allowCypressEnv: false,
   e2e: {
     supportFile: false,
