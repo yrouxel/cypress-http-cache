@@ -7,6 +7,10 @@ A blazing fast HTTP cache to drastically speed up Cypress End-to-End test suites
 In Run mode `npm cypress run`, Cypress uses a fresh browser for each test file. This completely wipes the browser cache, rendering its performance benefits useless.
 `cypress-http-cache` aims to partly solve this problem through a caching proxy. This proxy sits between Cypress and your web application.
 
+## Compatibility
+
+Cypress 10+
+
 ## Installation
 
 ```bash
@@ -60,7 +64,7 @@ Cache Usage:      0.0 MB / 100.0 MB
 
 ## Small print
 
-Author: Yoann Rouxel-Duval &copy; 2026
+Author: Yoann Rouxel &copy; 2026
 
 License: MIT - do anything with the code, but don't blame me if it does not work.
 
