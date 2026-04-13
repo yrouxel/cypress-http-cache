@@ -57,7 +57,7 @@ Hit Rate:         50.0% (1 Hits / 1 Misses)
 Avg Key Hit Rate: 1.0 (1 Hits / 1 Keys)
 Avg Hit Latency:  0.1ms
 Avg Miss Latency: 503.9ms
-Est. Time Saved:  503.75149899999997ms
+Est. Time Saved:  503.2ms
 Cache Usage:      0.0 MB / 100.0 MB
 ===================================================
 ```

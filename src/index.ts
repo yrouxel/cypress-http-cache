@@ -42,7 +42,7 @@ function printCacheSummary(stats: CacheStats) {
   console.log(`Avg Key Hit Rate: ${keyHitRate} (${hits} Hits / ${keysCount} Keys)`);
   console.log(`Avg Hit Latency:  ${avgHit}ms`);
   console.log(`Avg Miss Latency: ${avgMiss}ms`);
-  console.log(`Est. Time Saved:  ${timeSaved}ms`);
+  console.log(`Est. Time Saved:  ${timeSaved.toFixed(1)}ms`);
   console.log(`Cache Usage:      ${usedMB} MB / ${maxMB} MB`);
   console.log('===================================================\n');
 }
