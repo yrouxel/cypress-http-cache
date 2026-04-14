@@ -47,7 +47,7 @@ You can pass an optional configuration object as the third argument to `installH
 
 ## Stats
 
-When `logStats` is enabled, an in-depth summary is automatically printed to your terminal at the end of every Cypress suite run, detailing your exact Hit Rate, Avg Latency Saved, and Cache Memory Usage.
+When `logStats` is enabled, an in-depth summary is automatically printed to your terminal at the end of every Cypress suite run, detailing the usage of the cache.
 
 ```text
 ===================================================
@@ -57,7 +57,7 @@ Hit Rate:         50.0% (1 Hits / 1 Misses)
 Avg Key Hit Rate: 1.0 (1 Hits / 1 Keys)
 Avg Hit Latency:  0.1ms
 Avg Miss Latency: 503.9ms
-Est. Time Saved:  503.2ms
+Est. Time Saved:  503.8ms
 Cache Usage:      0.0 MB / 100.0 MB
 ===================================================
 ```

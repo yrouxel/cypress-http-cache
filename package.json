@@ -1,6 +1,6 @@
 {
   "name": "cypress-http-cache",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "In-memory http cache for Cypress.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -23,7 +23,8 @@
   },
   "keywords": [
     "cypress",
-    "http-cache"
+    "http",
+    "cache"
   ],
   "author": "Yoann Rouxel <yoann.rouxelduval@gmail.com>",
   "license": "MIT",
