@@ -29,21 +29,26 @@ function printCacheSummary(stats: CacheStats) {
   const hitRate = total > 0 ? ((hits / total) * 100).toFixed(1) : '0.0';
   const keyHitRate = keysCount > 0 ? (hits / keysCount).toFixed(1) : '0.0';
 
-  const avgHit = hits > 0 ? (hitTime / hits).toFixed(1) : '0.0';
-  const avgMiss = misses > 0 ? (missTime / misses).toFixed(1) : '0.0';
+  const avgHit = hits > 0 ? (hitTime / hits).toFixed(2) : '0.0';
+  const avgMiss = misses > 0 ? (missTime / misses).toFixed(2) : '0.0';
 
   const usedMB = (bytesUsed / (1024 * 1024)).toFixed(1);
   const maxMB = (bytesMax / (1024 * 1024)).toFixed(1);
 
+  const formattedTimeSaved = timeSaved > 1000 
+    ? `${(timeSaved / 1000).toFixed(2)}s` 
+    : `${timeSaved.toFixed(2)}ms`;
+
   console.log('\n===================================================');
-  console.log('📦  Cypress In-Memory Cache Summary');
+  console.log('📦  Cypress HTTP Cache Summary');
   console.log('===================================================');
-  console.log(`Hit Rate:         ${hitRate}% (${hits} Hits / ${misses} Misses)`);
-  console.log(`Avg Key Hit Rate: ${keyHitRate} (${hits} Hits / ${keysCount} Keys)`);
-  console.log(`Avg Hit Latency:  ${avgHit}ms`);
-  console.log(`Avg Miss Latency: ${avgMiss}ms`);
-  console.log(`Est. Time Saved:  ${timeSaved.toFixed(1)}ms`);
-  console.log(`Cache Usage:      ${usedMB} MB / ${maxMB} MB`);
+  console.log(`Total Time Saved: ~${formattedTimeSaved}`);
+  console.log(`Hit Rate:         ${hitRate}% (${hits} Hits / ${total} Total Requests)`);
+  console.log(`Cache Usage:      ${usedMB} MB / ${maxMB} MB (${keysCount} Cached Keys)`);
+  console.log('');
+  console.log('-- Diagnostics --');
+  console.log(`Avg Hit Latency:  ${avgHit}ms | Avg Miss: ${avgMiss}ms`);
+  console.log(`Avg Hits per Key: ${keyHitRate} (${hits} Hits / ${keysCount} Keys)`);
   console.log('===================================================\n');
 }
 

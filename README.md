@@ -1,11 +1,11 @@
 # cypress-http-cache
 
-A blazing fast HTTP cache to drastically speed up Cypress End-to-End test suites.
+A blazing fast in-memory HTTP cache to speed up Cypress End-to-End test suites.
 
 ## What it solves
 
-In Run mode `npm cypress run`, Cypress uses a fresh browser for each test file. This completely wipes the browser cache, rendering its performance benefits useless.
-`cypress-http-cache` aims to partly solve this problem through a caching proxy. This proxy sits between Cypress and your web application.
+With `npx cypress run`, Cypress uses a fresh browser for each test file. This completely wipes the browser cache, canceling its performance benefits and rendering it useless. 
+`cypress-http-cache` aims to solve this problem through an in-memory caching proxy that persists through the test run. This proxy sits between Cypress and your web application and caches its assets for faster page loading.
 
 ## Compatibility
 
@@ -51,14 +51,15 @@ When `logStats` is enabled, an in-depth summary is automatically printed to your
 
 ```text
 ===================================================
-📦  Cypress In-Memory Cache Summary
+📦  Cypress HTTP Cache Summary
 ===================================================
-Hit Rate:         50.0% (1 Hits / 1 Misses)
-Avg Key Hit Rate: 1.0 (1 Hits / 1 Keys)
-Avg Hit Latency:  0.1ms
-Avg Miss Latency: 503.9ms
-Est. Time Saved:  503.8ms
-Cache Usage:      0.0 MB / 100.0 MB
+Total Time Saved: ~56.16s
+Hit Rate:         87.6% (269 Hits / 307 Total Requests)
+Cache Usage:      0.5 MB / 100.0 MB (38 Cached Keys)
+
+-- Diagnostics --
+Avg Hit Latency:  0.03ms | Avg Miss: 213.43ms
+Avg Hits per Key: 7.1 (269 Hits / 38 Keys)
 ===================================================
 ```
 
