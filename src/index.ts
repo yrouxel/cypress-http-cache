@@ -80,9 +80,11 @@ export async function installHttpCache(
   if (!target) return config;
 
   const { cacheSize = 100, logStats = true, addCacheHeaders = true } = options;
-  const { port, close } = await startProxy({ target, cacheSize, logStats, addCacheHeaders });
-  config.baseUrl = `http://localhost:${port}`;
-  console.debug(`[Cypress HTTP Cache] Started. Traffic routed via Proxy port ${port}.`);
+  const targetUrl = new URL(target);
+  const { port, close } = await startProxy({ target: targetUrl.origin, cacheSize, logStats, addCacheHeaders });
+  const pathname = target.slice(targetUrl.origin.length);
+  config.baseUrl = `http://localhost:${port}${pathname}`;
+  console.debug(`[Cypress HTTP Cache] ${target} is now proxied at ${config.baseUrl}`);
 
   on('after:run', async () => {
     const stats = await close();
