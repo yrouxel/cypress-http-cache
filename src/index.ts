@@ -21,6 +21,13 @@ export interface HttpCacheOptions {
    * @default true
    */
   addCacheHeaders?: boolean;
+
+  /**
+   * Whether to verify the upstream server's TLS certificate.
+   * Set to `true` to enforce strict validation.
+   * @default false
+   */
+  secure?: boolean;
 }
 
 function printCacheSummary(stats: CacheStats) {
@@ -79,9 +86,9 @@ export async function installHttpCache(
   const target = config.baseUrl;
   if (!target) return config;
 
-  const { cacheSize = 100, logStats = true, addCacheHeaders = true } = options;
+  const { cacheSize = 100, logStats = true, addCacheHeaders = true, secure = false } = options;
   const targetUrl = new URL(target);
-  const { port, close } = await startProxy({ target: targetUrl.origin, cacheSize, logStats, addCacheHeaders });
+  const { port, close } = await startProxy({ target: targetUrl.origin, cacheSize, logStats, addCacheHeaders, secure });
   const pathname = target.slice(targetUrl.origin.length);
   config.baseUrl = `http://localhost:${port}${pathname}`;
   console.debug(`[Cypress HTTP Cache] ${target} is now proxied at ${config.baseUrl}`);

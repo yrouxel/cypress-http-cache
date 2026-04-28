@@ -44,6 +44,10 @@ You can pass an optional configuration object as the third argument to `installH
 | `cacheSize` | `number` | `100` | Maximum cache size in megabytes. Requests larger than this will not be cached. |
 | `logStats` | `boolean` | `true` | See below. |
 | `addCacheHeaders` | `boolean` | `true` | Whether to inject proxy diagnostic headers (`X-Cache` and `Server-Timing`) into network responses. |
+| `secure` | `boolean` | `false` | Whether to verify the upstream server's TLS certificate. |
+
+> **Tip:** If you enable `secure` and your target uses a private or internal CA, trust it via the standard Node.js environment variable:
+> `NODE_EXTRA_CA_CERTS=/path/to/ca.pem npx cypress run`
 
 ## Stats
 

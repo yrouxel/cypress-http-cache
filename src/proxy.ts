@@ -20,6 +20,7 @@ export interface ProxyOptions {
   cacheSize?: number;
   logStats?: boolean;
   addCacheHeaders?: boolean;
+  secure?: boolean;
 }
 
 interface CacheEntry {
@@ -34,6 +35,7 @@ export function startProxy({
   cacheSize,
   logStats,
   addCacheHeaders,
+  secure,
 }: Required<ProxyOptions>): Promise<{ port: number; close: () => Promise<CacheStats> }> {
   return new Promise((resolve) => {
     const cache = new LRUCache<string, CacheEntry>({
@@ -43,7 +45,7 @@ export function startProxy({
 
     const requestStartTimes = new WeakMap<IncomingMessage, number>();
     const stats = { hits: 0, misses: 0, hitTime: 0, missTime: 0, timeSaved: 0 };
-    const proxy = httpProxy.createProxyServer({ target, ws: true, changeOrigin: true });
+    const proxy = httpProxy.createProxyServer({ target, ws: true, changeOrigin: true, secure });
 
     proxy.on('proxyRes', (proxyRes, req) => {
       const extReq = req;
