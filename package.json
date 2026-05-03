@@ -1,21 +1,19 @@
 {
   "name": "cypress-http-cache",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "In-memory http cache for Cypress.",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     "types": "./dist/index.d.ts",
-    "require": "./dist/index.js",
-    "import": "./dist/index.mjs"
+    "default": "./dist/index.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/server.ts --format cjs --dts --clean",
+    "dev": "tsup src/index.ts src/server.ts --format cjs --dts --watch",
     "lint": "eslint src/ --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:server": "node test/test-server.js",

@@ -1,15 +1,11 @@
-import http, { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'http';
-import httpProxy from 'http-proxy';
+import { createServer, IncomingHttpHeaders } from 'http';
+import { createProxyServer } from 'http-proxy';
 import { LRUCache } from 'lru-cache';
-import { performance } from 'perf_hooks';
 import { Readable } from 'stream';
 
 export interface CacheStats {
   hits: number;
   misses: number;
-  hitTime: number;
-  missTime: number;
-  timeSaved: number;
   bytesUsed: number;
   bytesMax: number;
   keysCount: number;
@@ -27,7 +23,6 @@ interface CacheEntry {
   headers: IncomingHttpHeaders;
   chunks: Buffer[];
   totalLength: number;
-  originalDuration: number;
 }
 
 export function startProxy({
@@ -36,16 +31,15 @@ export function startProxy({
   logStats,
   addCacheHeaders,
   secure,
-}: Required<ProxyOptions>): Promise<{ port: number; close: () => Promise<CacheStats> }> {
-  return new Promise((resolve) => {
+}: Required<ProxyOptions>): Promise<{ port: number; close: () => Promise<void> }> {
+  return new Promise((resolve, reject) => {
     const cache = new LRUCache<string, CacheEntry>({
       maxSize: cacheSize * 1024 * 1024,
       sizeCalculation: (val) => val.totalLength,
     });
 
-    const requestStartTimes = new WeakMap<IncomingMessage, number>();
-    const stats = { hits: 0, misses: 0, hitTime: 0, missTime: 0, timeSaved: 0 };
-    const proxy = httpProxy.createProxyServer({ target, ws: true, changeOrigin: true, secure });
+    const stats = { hits: 0, misses: 0 };
+    const proxy = createProxyServer({ target, ws: true, changeOrigin: true, secure });
 
     proxy.on('proxyRes', (proxyRes, req) => {
       const extReq = req;
@@ -87,22 +81,12 @@ export function startProxy({
       });
 
       proxyRes.on('end', () => {
-        let originalDuration = 0;
-        if (logStats) {
-          const startTime = requestStartTimes.get(extReq);
-          if (startTime) {
-            originalDuration = performance.now() - startTime;
-            stats.missTime += originalDuration;
-            requestStartTimes.delete(extReq);
-          }
-        }
-
         if (currentSize > maxLimit || !extReq.url) {
           return;
         }
         cache.set(
           extReq.url,
-          { headers: proxyRes.headers, chunks: chunks, totalLength: currentSize, originalDuration },
+          { headers: proxyRes.headers, chunks: chunks, totalLength: currentSize },
           { ttl: maxAge * 1000 },
         );
       });
@@ -118,33 +102,32 @@ export function startProxy({
       }
     });
 
-    const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-      let startTime = 0;
-      if (logStats) {
-        startTime = performance.now();
-        requestStartTimes.set(req, startTime);
+    const server = createServer((req, res) => {
+      if (logStats && req.method === 'GET' && req.url === '/__cypress-http-cache__/stats') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            ...stats,
+            bytesUsed: cache.calculatedSize || 0,
+            bytesMax: cache.maxSize,
+            keysCount: cache.size,
+          }),
+        );
+        return;
       }
 
       let cacheBody: CacheEntry | undefined;
       if (req.method === 'GET' && req.url && (cacheBody = cache.get(req.url))) {
-        const { headers, chunks, originalDuration } = cacheBody;
+        const { headers, chunks } = cacheBody;
 
-        let duration = 0;
         if (logStats) {
           stats.hits++;
-          duration = performance.now() - startTime;
-          stats.hitTime += duration;
-          stats.timeSaved += originalDuration - duration;
         }
 
         const enhancedHeaders: IncomingHttpHeaders = { ...headers };
         if (addCacheHeaders) {
           enhancedHeaders['X-Cache'] = 'HIT';
-          if (logStats) {
-            enhancedHeaders['Server-Timing'] = `cache;desc="Hit";dur=${duration.toFixed(2)}`;
-          } else {
-            enhancedHeaders['Server-Timing'] = `cache;desc="Hit"`;
-          }
+          enhancedHeaders['Server-Timing'] = `cache;desc="Hit"`;
         }
 
         res.writeHead(200, enhancedHeaders);
@@ -155,22 +138,32 @@ export function startProxy({
     });
 
     server.on('upgrade', (req, socket, head) => proxy.ws(req, socket, head));
-
+    server.on('error', (err) => {
+      reject(new Error(`[Cypress HTTP Cache] Failed to start proxy: ${err.message}`));
+    });
     server.listen(0, () => {
       const address = server.address();
-      const port = typeof address === 'object' && address !== null ? address.port : 0;
+      if (!address) {
+        reject(new Error('[Cypress HTTP Cache] Failed to retrieve proxy server address'));
+        return;
+      }
+
+      if (typeof address === 'string') {
+        reject(
+          new Error(
+            `[Cypress HTTP Cache] Unexpected server address format (Unix socket): ${address}`,
+          ),
+        );
+        return;
+      }
+
       resolve({
-        port,
+        port: address.port,
         close: () =>
-          new Promise((resFn) => {
+          new Promise((resolveClose) => {
             server.close(() => {
               proxy.close();
-              resFn({
-                ...stats,
-                bytesUsed: cache.calculatedSize || 0,
-                bytesMax: cache.maxSize,
-                keysCount: cache.size,
-              });
+              resolveClose();
             });
           }),
       });
