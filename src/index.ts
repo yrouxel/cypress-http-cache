@@ -4,6 +4,7 @@ import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
 import { spawn } from 'child_process';
+import { get } from 'http';
 
 export interface HttpCacheOptions {
   /**
@@ -60,23 +61,37 @@ function isCacheStats(data: any): data is CacheStats {
 }
 
 async function fetchAndLogStats(proxyOrigin: string): Promise<void> {
-  try {
-    const res = await fetch(`${proxyOrigin}/__cypress-http-cache__/stats`);
-    if (!res.ok) {
-      console.debug(`[Cypress HTTP Cache] Stats request failed with status: ${res.status}`);
-      return;
-    }
+  return new Promise((resolve) => {
+    get(`${proxyOrigin}/__cypress-http-cache__/stats`, (res) => {
+      if (res.statusCode !== 200) {
+        console.debug(`[Cypress HTTP Cache] Stats request failed with status: ${res.statusCode}`);
+        resolve();
+        return;
+      }
 
-    const stats = await res.json();
-    if (isCacheStats(stats)) {
-      printCacheSummary(stats);
-    } else {
-      console.debug('[Cypress HTTP Cache] Received invalid stats format: ' + JSON.stringify(stats));
-    }
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    console.debug('[Cypress HTTP Cache] Could not fetch stats: ' + message);
-  }
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const stats = JSON.parse(data);
+          if (isCacheStats(stats)) {
+            printCacheSummary(stats);
+          } else {
+            console.debug('[Cypress HTTP Cache] Received invalid stats format: ' + data);
+          }
+        } catch (e) {
+          console.debug('[Cypress HTTP Cache] Could not parse stats JSON: ' + String(e));
+        }
+        resolve();
+      });
+    }).on('error', (e) => {
+      console.debug('[Cypress HTTP Cache] Could not fetch stats: ' + e.message);
+      resolve();
+    });
+  });
 }
 
 /**
