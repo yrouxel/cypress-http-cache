@@ -122,7 +122,7 @@ async function createOrReuseProxy(
 
   if (!detached) {
     const { port, close } = await startProxy({
-      target: targetUrl.origin,
+      target: targetUrl,
       cacheSize,
       logStats: stats !== 'never',
       addCacheHeaders,

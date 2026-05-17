@@ -12,7 +12,7 @@ export interface CacheStats {
 }
 
 export interface ProxyOptions {
-  target: string;
+  target: URL;
   cacheSize?: number;
   logStats?: boolean;
   addCacheHeaders?: boolean;
@@ -39,22 +39,39 @@ export function startProxy({
     });
 
     const stats = { hits: 0, misses: 0 };
-    const proxy = createProxyServer({ target, ws: true, changeOrigin: true, secure });
+    const targetHost = target.hostname;
+    const proxy = createProxyServer({
+      target: target.origin,
+      ws: true,
+      changeOrigin: true,
+      secure,
+      cookieDomainRewrite: {
+        [targetHost]: 'localhost',
+        [`.${targetHost}`]: 'localhost',
+      },
+    });
 
     proxy.on('proxyRes', (proxyRes, req) => {
       const extReq = req;
-      if (extReq.method !== 'GET') {
+      const cacheControl = proxyRes.headers['cache-control'];
+      if (
+        extReq.method !== 'GET' ||
+        proxyRes.statusCode !== 200 ||
+        proxyRes.headers['set-cookie'] ||
+        !cacheControl
+      ) {
         return;
       }
 
-      const cacheControl = proxyRes.headers['cache-control'] || '';
       const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
-      const maxAge = maxAgeMatch ? parseInt(maxAgeMatch[1], 10) : 0;
+      if (!maxAgeMatch || /no-store/i.test(cacheControl) || /private/i.test(cacheControl)) {
+        return;
+      }
 
-      const isCacheable =
-        proxyRes.statusCode === 200 && maxAge > 0 && !/no-store/i.test(cacheControl);
-
-      if (!isCacheable) {
+      const maxAge = parseInt(maxAgeMatch[1], 10);
+      const varyHeader = proxyRes.headers['vary'];
+      const varyStr = Array.isArray(varyHeader) ? varyHeader.join(', ') : varyHeader || '';
+      if (maxAge <= 0 || /cookie|authorization/i.test(varyStr)) {
         return;
       }
 

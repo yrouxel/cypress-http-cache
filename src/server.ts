@@ -38,7 +38,7 @@ async function run() {
 
   try {
     const { port } = await startProxy({
-      target,
+      target: new URL(target),
       cacheSize,
       logStats,
       addCacheHeaders,
