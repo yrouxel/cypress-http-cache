@@ -52,6 +52,14 @@ export function startProxy({
     });
 
     proxy.on('proxyRes', (proxyRes, req) => {
+      const upstreamSetCookie = proxyRes.headers['set-cookie'];
+      if (upstreamSetCookie) {
+        const list = Array.isArray(upstreamSetCookie) ? upstreamSetCookie : [upstreamSetCookie];
+        proxyRes.headers['set-cookie'] = list.map((cookie) =>
+          cookie.replace(/;\s*Secure/gi, '').replace(/;\s*SameSite=None/gi, '; SameSite=Lax'),
+        );
+      }
+
       const extReq = req;
       const cacheControl = proxyRes.headers['cache-control'];
       if (
